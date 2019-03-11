@@ -86,6 +86,7 @@ He won 2 Oscars. [Another 82 wins & 166 nominations](https://www.imdb.com/name/n
 * [mongodb](https://www.npmjs.com/package/mongodb) - Mongo DB Native NodeJS Driver
 * [dotenv](https://www.npmjs.com/package/dotenv) - Loads environment variables from .env for nodejs projects
 * [graphql](https://www.npmjs.com/package/graphql) - A reference implementation of GraphQL for JavaScript
+* [nodemon](https://www.npmjs.com/package/nodemon) - Monitor for any changes in your node.js application and automatically restart the server - perfect for development 
 
 ### REST endpoints to implement
 
