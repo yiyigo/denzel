@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <title>Random film displayer</title>
+        <style>
+            .media {
+                margin: 24px 0;
+                background-color: #b1edf3;
+            }
+
+            .media-left {
+                margin-right: 24px;
+            }
+
+            .media-body {
+                min-height: 268px;
+                cursor: pointer;
+            }
+
+            .dropdown-menu form fieldset {
+                text-align: center;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Denzel's filmography</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active" id='movies'>
+                        <a class="nav-link" href="#">Movies <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Custom search
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <form>
+                                <label for="customRange3">Minimum metascore</label>
+                                <fieldset>
+                                    <input type="range" class="custom-range" name="Meta" min="0" max="100" step="1"
+                                        id="rangeMeta" oninput="resultMeta.value=parseInt(Meta.value)">
+                                    <output name="resultMeta">50</output>
+                                </fieldset>
+                            </form>
+                            <form>
+                                <label for="customRange3">Results limit</label>
+                                <fieldset>
+                                    <input type="range" class="custom-range" name="Limit" min="0" max="30" step="1"
+                                        id="rangeLimit" oninput="resultLimit.value=parseInt(Limit.value)">
+                                    <output name="resultLimit">15</output>
+                                </fieldset>
+                            </form>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id='searchBtn'>Search</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container" id='lists'></div>
+
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">New message</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="recipient-name" class="control-label">Recipient:</label>
+                                <input type="text" class="form-control" id="recipient-name">
+                            </div>
+                            <div class="form-group">
+                                <label for="message-text" class="control-label">Message:</label>
+                                <textarea class="form-control" id="message-text"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Send message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+        </script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+        </script>
+
+        <script type="text/javascript">
+            $( function () {
+                function searchParameters( isAll ) {
+                    var metaResult = document.getElementById( "rangeMeta" ).value;
+                    var rangeLimit = document.getElementById( "rangeLimit" ).value;
+                    var domLists = document.getElementById( "lists" );
+
+                    var request = new XMLHttpRequest();
+                    // var URl = "http://localhost:9292/movies/search?limit=" + rangeLimit + "&metascore=" +
+                    //     metaResult;
+
+                    // if ( isAll ) URl = 'http://localhost:9292/movies';
+
+                    var URl = 'http://localhost:9292/graphql'
+                    var queryString = '?'
+
+                    if ( isAll ) {
+                        queryString +=
+                            'query=query{lists: movieLists{id, title, poster, link, synopsis, metascore, review}}'
+                    } else {
+                        queryString +=
+                            'query=query{lists: movieFilter(limit:' + rangeLimit + ', metascore:' + metaResult +
+                            '){id, title, poster, link, synopsis, metascore, review}}'
+                    }
+
+                    URl += queryString
+
+                    request.open( 'GET', URl, true );
+
+                    request.onload = function () {
+                        if ( request.status >= 200 && request.status < 400 ) {
+                            // Success!
+                            var item = null
+                            var data = JSON.parse( request.responseText );
+                            console.log( data )
+                            var template =
+                                '<div class="media" data-id="{id}">\
+                                            <div class="media-left media-middle">\
+                                                <a href="{href}" target="_blank">\
+                                                    <img class="media-object" src="{src}" />\
+                                                </a>\
+                                            </div>\
+                                            <div class="media-body" data-toggle="modal" data-target="#modal" data-id="{id}">\
+                                                <h4 class="media-heading">{title}</h4>\
+                                                <p>{desc}</p>\
+                                                <p>\
+                                                    metascore：<span class="label label-success">{metascore}</span>\
+                                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;review：<span class="label label-info">{review}</span>\
+                                                </p>\
+                                            </div>\
+                                        </div>';
+                            var html = '';
+                            for ( var t = 0; t < data.data.lists.length; t++ ) {
+                                item = data.data.lists[ t ]
+
+                                html += template.replace( '{id}', item.id ).replace( '{href}', item.link )
+                                    .replace( '{src}', item.poster ).replace( '{title}', item.title )
+                                    .replace( '{desc}', item.synopsis ).replace( '{metascore}', item
+                                        .metascore ).replace( '{review}', item.review || 0 );
+                            }
+                            domLists.innerHTML = html;
+                        } else {
+                            // We reached our target server, but it returned an error
+
+                        }
+                    };
+
+                    request.onerror = function () {
+                        // There was a connection error of some sort
+                    };
+
+                    request.send();
+                }
+
+                document.querySelector( '#movies' ).addEventListener( 'click', function ( e ) {
+                    searchParameters( true );
+                }, false );
+
+                document.querySelector( '#searchBtn' ).addEventListener( 'click', function ( e ) {
+                    searchParameters( false );
+                }, false );
+
+                searchParameters( true );
+
+            } )
+
+        </script>
+    </body>
+
+</html>
